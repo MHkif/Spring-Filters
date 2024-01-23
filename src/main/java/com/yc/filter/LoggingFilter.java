@@ -3,35 +3,29 @@ package com.yc.filter;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
 
 @Component
-@Order(1)
-//Specifies the priority of this filter in the chain of filters. A lower order value means it's executed earlier.
+@Order(1) //Specifies the priority of this filter in the chain of filters. A lower order value means it's executed earlier.
 @Slf4j
-public class LoggingFilter implements Filter {
+public class LoggingFilter extends OncePerRequestFilter {
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        // Initialization logic if needed
-        Filter.super.init(filterConfig);
-    }
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-        final HttpServletRequest httpRequest = (HttpServletRequest) request;
-        final HttpServletResponse httpRes = (HttpServletResponse) response;
-
-        final String authorization = httpRequest.getHeader("authorization");
-        Collections.list(httpRequest.getHeaderNames())
+        final String authorization = request.getHeader("authorization");
+        Collections.list(request.getHeaderNames())
                 .forEach(header -> {
-                    log.info("Header: {} = {}", header, httpRequest.getHeader(header));
+                    log.info("Header: {} = {}", header, request.getHeader(header));
                 });
 
         log.info("Authorization : {}", authorization);
@@ -41,14 +35,8 @@ public class LoggingFilter implements Filter {
             // Continue with the filter chain
             chain.doFilter(request, response);
         } else {
-            httpRes.sendRedirect("/unauthorized"); // Redirect to unauthorized page
+            response.sendRedirect("/unauthorized"); // Redirect to unauthorized page
         }
     }
 
-
-    @Override
-    public void destroy() {
-        // Cleanup logic if needed
-        Filter.super.destroy();
-    }
 }
